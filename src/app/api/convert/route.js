@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import path from 'path';
 
 // Configuration
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB (match frontend)
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 15 MB (match frontend)
 const DEFAULT_QUALITY = 80; // Default quality for lossy formats
 const SUPPORTED_OUTPUT_FORMATS = ['webp','jpg', 'jpeg', 'png', 'avif',]; // Ensure backend supports these
 

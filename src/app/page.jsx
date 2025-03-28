@@ -6,7 +6,7 @@ import JSZip from 'jszip'; // For creating ZIP files
 import { saveAs } from 'file-saver'; // For triggering downloads
 
 // --- Constants ---
-const MAX_FILE_SIZE_MB = 15;
+const MAX_FILE_SIZE_MB = 100;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 // Define supported output formats (ensure backend API supports these via Sharp)
 const SUPPORTED_FORMATS = ['webp', 'jpg', 'jpeg', 'png', 'avif',];
@@ -161,7 +161,7 @@ export default function PngConverterPage() {
                         <span>Freee Image Converter</span>
                     </h1>
                     <p className="subtitle">I hate paid converters so i built for free 😉  </p>
-                    <p className="subtitle">Convert multiple images to WebP, JPEG, PNG, AVIF for free.</p>
+                    <p className="subtitle">Convert multiple images to WebP, JPEG, PNG, AVIF for fre.</p>
                 </header>
 
                 <form onSubmit={handleSubmit}> {/* Form element */}
