@@ -161,7 +161,7 @@ export default function PngConverterPage() {
                         <span>Freee Image Converter</span>
                     </h1>
                     <p className="subtitle">I hate paid converters so i built for free 😉  </p>
-                    <p className="subtitle">Convert multiple images to WebP, JPEG, PNG, AVIF, GIF, and more.</p>
+                    <p className="subtitle">Convert multiple images to WebP, JPEG, PNG, AVIF for free.</p>
                 </header>
 
                 <form onSubmit={handleSubmit}> {/* Form element */}
