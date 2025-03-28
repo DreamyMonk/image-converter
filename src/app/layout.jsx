@@ -4,8 +4,8 @@ import './globals.css' // Make sure your global styles are imported
 
 // Optional: Add metadata
 export const metadata = {
-  title: 'My PNG to WebP Converter', // Example title
-  description: 'Convert PNG images to WebP format easily.', // Example description
+  title: ' Freee Image Converter', // Example title
+  description: 'I hate paid converters so i built for free 😉', // Example description
 }
 
 export default function RootLayout({ children }) {

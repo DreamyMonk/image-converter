@@ -1,193 +1,114 @@
 /* src/app/globals.css */
 
 /* --- Basic Reset & Body --- */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html,
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 body {
-  height: 100%;
-}
-
-body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  line-height: 1.6;
-  background-color: #f8f9fa;
-  color: #212529;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2rem 1rem;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6; background-color: #f8f9fa; color: #212529;
+    display: flex; align-items: flex-start; justify-content: center;
+    min-height: 100vh; padding: 2rem 1rem;
 }
 
 /* --- Main Converter Card --- */
 .converter-card {
-  background-color: #ffffff;
-  padding: 2rem 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  max-width: 650px;
-  text-align: center;
-  border: 1px solid #e9ecef;
+    background-color: #ffffff; padding: 2rem 2.5rem; border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); width: 100%; max-width: 650px;
+    text-align: center; border: 1px solid #e9ecef;
 }
 
 /* --- Header --- */
 .converter-card header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-  color: #111827;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
+    font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; color: #111827;
+    display: flex; align-items: center; justify-content: center; gap: 0.75rem;
 }
-.converter-card header h1 svg {
-  color: #3b82f6;
-}
-
-.converter-card header .subtitle {
-  font-size: 1rem;
-  color: #6c757d;
-  margin-bottom: 2rem;
-}
+.converter-card header h1 svg { color: #3b82f6; }
+.converter-card header .subtitle { font-size: 1rem; color: #6c757d; margin-bottom: 2rem; }
 
 /* --- Form Elements --- */
-.form-section {
-  margin-bottom: 2rem;
-  text-align: left;
+.form-section { margin-bottom: 2rem; text-align: left; }
+.form-section label { display: block; margin-bottom: 0.75rem; font-weight: 600; color: #495057; font-size: 0.9rem; }
+.form-section input[type="file"], .form-section select {
+    display: block; width: 100%; padding: 0.75rem 1rem; border: 1px solid #ced4da;
+    border-radius: 8px; font-size: 0.95rem; background-color: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.form-section label {
-  display: block;
-  margin-bottom: 0.75rem;
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.9rem;
-}
-
-.form-section input[type="file"],
-.form-section select {
-  display: block;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background-color: #fff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.form-section input[type="file"] {
-   cursor: pointer;
-   color: #495057;
-}
+.form-section input[type="file"] { cursor: pointer; color: #495057; }
 .form-section input[type="file"]::file-selector-button {
-  margin-right: 1rem;
-  padding: 0.6rem 1rem;
-  border-radius: 6px;
-  border: none;
-  font-weight: 500;
-  color: #3b82f6;
-  background-color: #eff6ff;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+    margin-right: 1rem; padding: 0.6rem 1rem; border-radius: 6px; border: none;
+    font-weight: 500; color: #3b82f6; background-color: #eff6ff; cursor: pointer;
+    transition: background-color 0.2s ease;
 }
-.form-section input[type="file"]::file-selector-button:hover {
-  background-color: #dbeafe;
-}
-
+.form-section input[type="file"]::file-selector-button:hover { background-color: #dbeafe; }
 .form-section select {
-  cursor: pointer;
-   appearance: none;
-   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-   background-position: right 1rem center;
-   background-repeat: no-repeat;
-   background-size: 1.2em 1.2em;
+    cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 1rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em;
 }
-
-.form-section input[type="file"]:focus,
-.form-section select:focus {
-  outline: none;
-  border-color: #6fa5f7;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+.form-section input[type="file"]:focus, .form-section select:focus {
+    outline: none; border-color: #6fa5f7; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
+.form-section .help-text { margin-top: 0.5rem; font-size: 0.8rem; color: #6c757d; }
 
-.form-section .help-text {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  color: #6c757d;
+/* --- File List --- */
+.file-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.file-list-header label { margin-bottom: 0; }
+.clear-all-button {
+    background: none; border: none; color: #dc3545; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease; text-align: center;
 }
-
-/* --- File List (Selected Files) --- */
+.clear-all-button:hover { background-color: #f8d7da; color: #842029; }
+.clear-all-button:disabled { color: #adb5bd; cursor: not-allowed; background-color: transparent; }
 .file-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 1rem;
-  text-align: left;
-  font-size: 0.9rem;
-  max-height: 150px;
-  overflow-y: auto;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 0.5rem;
-  background-color: #f8f9fa;
+    list-style: none; padding: 0; margin-top: 1rem; text-align: left; font-size: 0.9rem;
+    max-height: 150px; overflow-y: auto; border: 1px solid #e9ecef;
+    border-radius: 8px; padding: 0.5rem; background-color: #f8f9fa;
 }
 .file-list li {
-  padding: 0.4rem 0.8rem;
-  border-bottom: 1px solid #dee2e6;
-  color: #495057;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem;
+    border-bottom: 1px solid #dee2e6;
 }
-.file-list li:last-child {
-  border-bottom: none;
+.file-list li:last-child { border-bottom: none; }
+.file-list .file-details {
+    flex-grow: 1; display: flex; justify-content: space-between;
+    align-items: center; overflow: hidden;
 }
-.file-list .file-size {
-  font-size: 0.8em;
-  color: #6c757d;
-  margin-left: 0.5rem;
+.file-list .file-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 0.5rem; }
+.file-list .file-size { font-size: 0.8em; color: #6c757d; margin-left: 0.5rem; white-space: nowrap; }
+.deselect-button {
+    background: none; border: 1px solid #ced4da; color: #6c757d; font-size: 0.9rem;
+    font-weight: bold; cursor: pointer; padding: 0; border-radius: 50%;
+    width: 20px; height: 20px; line-height: 18px; text-align: center;
+    flex-shrink: 0; transition: all 0.2s ease;
 }
+.deselect-button:hover { background-color: #e9ecef; color: #495057; border-color: #adb5bd; }
+.deselect-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* --- Convert Button --- */
 .convert-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.8rem 2rem;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
-  width: 100%;
-  margin-top: 1rem;
+    display: inline-flex; align-items: center; justify-content: center; /* Use flex centering */
+    padding: 0.8rem 2rem; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease-in-out; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+    width: 100%; margin-top: 1rem; text-align: center; /* Fallback/ensure text node center */
 }
 .convert-button:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
-  transform: translateY(-2px);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3); transform: translateY(-2px);
 }
 .convert-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #adb5bd;
-  box-shadow: none;
-  transform: none;
+    opacity: 0.5; cursor: not-allowed; background: #adb5bd; box-shadow: none; transform: none;
 }
+/* Style for ANY SVG inside convert button (spinner or arrow) */
 .convert-button svg {
- margin-right: 0.6rem;
- width: 1.25rem;
- height: 1.25rem;
+   margin-right: 0.6rem;
+   width: 1.25rem; /* 20px */
+   height: 1.25rem; /* 20px */
+   flex-shrink: 0; /* Prevent icon shrinking */
+   display: inline-block; /* Make sure it takes space */
+   vertical-align: middle; /* Align nicely with text */
 }
 
 /* Loading spinner animation */
@@ -195,137 +116,60 @@ body {
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* --- Results Area --- */
-.results-area {
-  margin-top: 2.5rem;
-  text-align: left;
-  border-top: 1px solid #dee2e6;
-  padding-top: 2rem;
-}
-.results-area h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 1.5rem;
-}
+.results-area { margin-top: 2.5rem; text-align: left; border-top: 1px solid #dee2e6; padding-top: 2rem; }
+.results-area h2 { font-size: 1.25rem; font-weight: 600; color: #495057; margin-bottom: 1.5rem; text-align: center; }
 .result-item {
-  background-color: #f8f9fa;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #e9ecef;
+    background-color: #f8f9fa; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1rem;
+    display: flex; justify-content: space-between; align-items: center; border: 1px solid #e9ecef;
 }
 .result-item .file-info {
-  font-size: 0.95rem;
-  color: #343a40;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding-right: 1rem;
+    flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding-right: 1rem; text-align: left; font-size: 0.95rem; color: #343a40;
 }
-.result-item .file-info span {
-  font-weight: 500;
-}
+.result-item .file-info span { font-weight: 500; }
 
 /* --- Individual Download Button --- */
 .download-button {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  background-color: #198754;
-  color: white;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem;
+    border: none; border-radius: 6px; background-color: #198754; color: white;
+    font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease;
+    white-space: nowrap; text-align: center;
 }
-.download-button:hover {
-  background-color: #157347;
-}
-.download-button svg {
-  margin-right: 0.4rem;
-  width: 1rem;
-  height: 1rem;
-}
+.download-button:hover { background-color: #157347; }
+.download-button svg { margin-right: 0.4rem; width: 1rem; height: 1rem; flex-shrink: 0; }
 
 /* --- Download All Button --- */
-.download-all-container { /* Container to center the button */
-  text-align: center;
-  margin-top: 1rem;
-  border-top: 1px solid #dee2e6;
-  padding-top: 1.5rem;
-}
+.download-all-container { text-align: center; margin-top: 1rem; border-top: 1px solid #dee2e6; padding-top: 1.5rem; }
 .download-all-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.7rem 1.8rem;
-  border: none;
-  border-radius: 8px;
-  background: #6c757d; /* Default gray */
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  /* width: auto; */ /* Let it size based on content */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: inline-flex; align-items: center; justify-content: center; padding: 0.7rem 1.8rem;
+    border: none; border-radius: 8px; background: #6c757d; color: white;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); text-align: center;
 }
-.download-all-button:hover {
-  background-color: #5a6268;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-.download-all-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #adb5bd;
-  box-shadow: none;
-  transform: none;
-}
-.download-all-button svg {
- margin-right: 0.5rem;
- width: 1.1rem;
- height: 1.1rem;
-}
+.download-all-button:hover { background-color: #5a6268; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); transform: translateY(-1px); }
+.download-all-button:disabled { opacity: 0.5; cursor: not-allowed; background: #adb5bd; box-shadow: none; transform: none; }
+.download-all-button svg { margin-right: 0.5rem; width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
 
 /* --- Footer --- */
-footer {
-  margin-top: 2.5rem;
-  font-size: 0.8rem;
-  color: #adb5bd;
-}
+footer { margin-top: 2.5rem; font-size: 0.8rem; color: #adb5bd; }
 
-/* --- SweetAlert Customization (Optional) --- */
-.swal2-popup {
-font-family: 'Inter', sans-serif !important;
-border-radius: 12px !important;
-}
-.swal2-title {
-font-weight: 600 !important;
-}
-.swal2-confirm {
-  border-radius: 6px !important;
-  padding: 0.6rem 1.5rem !important;
-  background-color: #3b82f6 !important;
-  box-shadow: none !important;
-}
-.swal2-confirm:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4) !important;
-}
+/* --- SweetAlert Customization --- */
+.swal2-popup { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; }
+.swal2-title { font-weight: 600 !important; }
+.swal2-confirm { border-radius: 6px !important; padding: 0.6rem 1.5rem !important; background-color: #3b82f6 !important; box-shadow: none !important; }
+.swal2-confirm:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4) !important; }
 
 /* --- Responsiveness --- */
 @media (max-width: 600px) {
-  body { padding: 1rem 0.5rem; }
-  .converter-card { padding: 1.5rem; border-radius: 12px; }
-  .converter-card header h1 { font-size: 1.5rem; gap: 0.5rem; }
-  .converter-card header .subtitle { font-size: 0.9rem; margin-bottom: 1.5rem; }
-  .result-item { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .download-button { width: 100%; justify-content: center; }
-  .download-all-button { width: 100%; /* Make download all full width on small screens */ }
+    body { padding: 1rem 0.5rem; }
+    .converter-card { padding: 1.5rem; border-radius: 12px; }
+    .converter-card header h1 { font-size: 1.5rem; gap: 0.5rem; }
+    .converter-card header .subtitle { font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .result-item { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+    .result-item .file-info { padding-right: 0; text-align: center; }
+    .download-button { width: 100%; justify-content: center; }
+    .download-all-button { width: 100%; }
+    .file-list li { gap: 0.75rem; }
+    .file-list .file-details { flex-direction: column; align-items: flex-start; gap: 0.1rem; }
+    .file-list .file-size { margin-left: 0; }
 }
