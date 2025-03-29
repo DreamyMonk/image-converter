@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "browser-image-compression": "^2.0.2",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "next": "15.2.4",
