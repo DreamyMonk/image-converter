@@ -7,11 +7,9 @@ import { saveAs } from "file-saver"; // For client-side file saving
 import imageCompression from "browser-image-compression"; // For client-side image conversion
 
 // --- Constants ---
-const MAX_FILE_SIZE_MB = 100; // Max file size for client-side validation (mainly for user feedback)
+const MAX_FILE_SIZE_MB = 100;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-// Pixel limit check (important for client-side performance/memory)
-const MAX_IMAGE_PIXELS = 2_000_000_000; // 2 Billion pixels - adjust if needed for browser stability
-// Define supported output formats for browser-image-compression
+const MAX_IMAGE_PIXELS = 2_000_000_000;
 const SUPPORTED_OUTPUT_FORMATS = ["webp", "jpeg", "png", "gif"];
 
 // --- Helper Function: Format Bytes ---
@@ -42,62 +40,47 @@ const getImageDimensions = (file) => {
       img.onerror = (err) => {
         reject(new Error("Could not load image data."));
       };
-      img.src = e.target.result; // Use result from FileReader
+      img.src = e.target.result;
     };
     reader.onerror = (err) => {
       reject(new Error("Could not read file."));
     };
-    reader.readAsDataURL(file); // Read file to get Data URL for Image object
+    reader.readAsDataURL(file);
   });
 };
 
 // --- Main React Component ---
 export default function PngConverterPage() {
-  // --- State Variables ---
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [outputFormat, setOutputFormat] = useState("webp");
   const [convertedFilesData, setConvertedFilesData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
-
-  // --- Refs ---
   const fileInputRef = useRef(null);
-  // Ref for latest selected files (optional, kept for potential future use or complex scenarios)
   const latestSelectedFilesRef = useRef(selectedFiles);
 
-  // --- Effect Hook ---
-  // Keep the ref synchronized with the selectedFiles state
   useEffect(() => {
     latestSelectedFilesRef.current = selectedFiles;
   }, [selectedFiles]);
 
-  // --- Event Handlers ---
-
-  // Handles new file selections, appends unique files, performs client-side validation
-  // *** FIXED: Added async keyword ***
   const handleFileChange = async (event) => {
-    setConvertedFilesData([]); // Clear previous results
+    setConvertedFilesData([]);
     const newlySelectedRawFiles = Array.from(event.target.files || []);
     const currentFileIds = new Set(
       selectedFiles.map((f) => `${f.name}-${f.size}-${f.lastModified}`)
     );
-
     let filesToAdd = [];
     let errors = [];
-    let processingPromises = []; // Store promises for dimension checks
-
+    let processingPromises = [];
     newlySelectedRawFiles.forEach((file) => {
-      // *** FIXED: Use 'file' variable instead of 'f' ***
-      const fileId = `${file.name}-${file.size}-${file.lastModified}`;
-
-      // --- Initial Synchronous Checks ---
+      const fileId = `${file.name}-${file.size}-${file.lastModified}`; // Corrected var name
       if (currentFileIds.has(fileId)) {
         return;
-      } // Skip duplicate
+      }
       if (!file.type.startsWith("image/")) {
         errors.push(`"${file.name}" (ignored): Not an image.`);
         return;
-      } // Skip non-images
+      }
       if (file.size > MAX_FILE_SIZE_BYTES) {
         errors.push(
           `"${file.name}" (${formatBytes(
@@ -105,9 +88,7 @@ export default function PngConverterPage() {
           )}) (ignored): Exceeds ${MAX_FILE_SIZE_MB} MB limit.`
         );
         return;
-      } // Skip large files
-
-      // --- Asynchronous Dimension Check ---
+      }
       const dimensionPromise = getImageDimensions(file)
         .then((dimensions) => {
           const pixelCount = dimensions.width * dimensions.height;
@@ -115,12 +96,12 @@ export default function PngConverterPage() {
             errors.push(
               `"${file.name}" (${dimensions.width}x${
                 dimensions.height
-              }) (ignored): Exceeds dimension limit (${(
+              }) (ignored): Exceeds pixel limit (${(
                 MAX_IMAGE_PIXELS / 1_000_000
               ).toFixed(0)}M pixels).`
             );
           } else {
-            filesToAdd.push(file); // Mark file to be added
+            filesToAdd.push(file);
           }
         })
         .catch((err) => {
@@ -130,12 +111,7 @@ export default function PngConverterPage() {
         });
       processingPromises.push(dimensionPromise);
     });
-
-    // Wait for all asynchronous dimension checks to complete
-    // *** FIX: 'await' is now allowed because the function is 'async' ***
     await Promise.allSettled(processingPromises);
-
-    // --- Update State ---
     if (filesToAdd.length > 0) {
       setSelectedFiles((prevFiles) => {
         const existingIds = new Set(
@@ -150,32 +126,23 @@ export default function PngConverterPage() {
         return [...prevFiles, ...trulyNewFiles];
       });
     }
-
-    // --- Show Validation Errors ---
     if (errors.length > 0) {
       Swal.fire({
         icon: "warning",
-        title: "Some files were ignored during selection",
+        title: "Some files ignored",
         html: errors.join("<br>"),
         customClass: { popup: "swal2-popup" },
       });
     }
-
-    // Clear the visible file input field after processing
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }; // --- End handleFileChange ---
-
-  // Removes a single file from the selectedFiles list
-  const handleDeselectFile = (indexToRemove) => {
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((_, index) => index !== indexToRemove)
-    );
-    setConvertedFilesData([]);
   };
 
-  // Clears all selected files
+  const handleDeselectFile = (indexToRemove) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== indexToRemove));
+    setConvertedFilesData([]);
+  };
   const handleClearAll = () => {
     setSelectedFiles([]);
     setConvertedFilesData([]);
@@ -183,38 +150,31 @@ export default function PngConverterPage() {
       fileInputRef.current.value = "";
     }
   };
-
-  // Updates the target output format state
   const handleFormatChange = (event) => {
     setOutputFormat(event.target.value);
     setConvertedFilesData([]);
   };
 
-  // Handles the main "Convert" button click (Client-Side Conversion)
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (selectedFiles.length === 0) {
       Swal.fire({
         icon: "warning",
         title: "No files selected",
-        text: "Please select one or more image files.",
+        text: "Please select image files.",
         customClass: { popup: "swal2-popup" },
       });
       return;
     }
-
     setIsLoading(true);
     setConvertedFilesData([]);
     const results = [];
     const errors = [];
-
     const options = {
       useWebWorker: true,
       initialQuality: 0.8,
       mimeType: `image/${outputFormat === "jpeg" ? "jpg" : outputFormat}`,
-      // Add other browser-image-compression options if needed
     };
-
     Swal.fire({
       title: "Converting Files...",
       html: `Processing ${selectedFiles.length} image(s)...`,
@@ -222,7 +182,6 @@ export default function PngConverterPage() {
       didOpen: () => Swal.showLoading(),
       customClass: { popup: "swal2-popup" },
     });
-
     for (const file of selectedFiles) {
       try {
         const compressedFileBlob = await imageCompression(file, options);
@@ -237,7 +196,6 @@ export default function PngConverterPage() {
           originalName: file.name,
         });
       } catch (error) {
-        console.error(`Error converting file ${file.name}:`, error);
         errors.push({
           originalName: file.name,
           error: error.message || "Conversion failed.",
@@ -245,30 +203,27 @@ export default function PngConverterPage() {
         });
       }
     }
-
     setIsLoading(false);
     setConvertedFilesData(results);
     Swal.close();
-
-    // Show summary notification
     if (errors.length > 0 && results.length > 0) {
-      const errorHtml = errors
-        .map((err) => `<b>${err.originalName}:</b> ${err.error}`)
+      const errHtml = errors
+        .map((e) => `<b>${e.originalName}:</b> ${e.error}`)
         .join("<br>");
       Swal.fire({
         icon: "warning",
         title: "Completed with Issues",
-        html: `Successfully converted ${results.length} file(s).<br><br><b>Errors:</b><br>${errorHtml}`,
+        html: `Converted ${results.length} file(s).<br><br><b>Errors:</b><br>${errHtml}`,
         customClass: { popup: "swal2-popup" },
       });
     } else if (errors.length > 0) {
-      const errorHtml = errors
-        .map((err) => `<b>${err.originalName}:</b> ${err.error}`)
+      const errHtml = errors
+        .map((e) => `<b>${e.originalName}:</b> ${e.error}`)
         .join("<br>");
       Swal.fire({
         icon: "error",
         title: "Conversion Failed",
-        html: errorHtml,
+        html: errHtml,
         customClass: { popup: "swal2-popup" },
       });
     } else if (results.length > 0) {
@@ -284,31 +239,31 @@ export default function PngConverterPage() {
       Swal.fire({
         icon: "info",
         title: "No files converted",
-        text: "No files were successfully processed.",
         customClass: { popup: "swal2-popup" },
       });
     }
   };
 
-  // Handles download for a single file
   const handleDownload = (blob, filename) => {
     try {
       saveAs(blob, filename);
-    } catch (error) {
-      console.error("Download failed:", error);
+    } catch (e) {
       Swal.fire({
         icon: "error",
         title: "Download Failed",
-        text: "Could not initiate file download.",
         customClass: { popup: "swal2-popup" },
       });
     }
   };
 
-  // Handles creating and downloading all converted files as a ZIP
   const handleDownloadAll = async () => {
     if (convertedFilesData.length === 0) {
-      /* ... no files alert ... */ return;
+      Swal.fire({
+        icon: "info",
+        title: "No files to zip",
+        customClass: { popup: "swal2-popup" },
+      });
+      return;
     }
     setIsZipping(true);
     Swal.fire({
@@ -320,10 +275,8 @@ export default function PngConverterPage() {
     });
     try {
       const zip = new JSZip();
-      convertedFilesData.forEach((fileData) => {
-        if (fileData.blob && fileData.outputName) {
-          zip.file(fileData.outputName, fileData.blob);
-        }
+      convertedFilesData.forEach((f) => {
+        if (f.blob && f.outputName) zip.file(f.outputName, f.blob);
       });
       const zipBlob = await zip.generateAsync(
         {
@@ -332,31 +285,26 @@ export default function PngConverterPage() {
           compressionOptions: { level: 6 },
         },
         (metadata) => {
-          // Progress callback
           const progress = metadata.percent.toFixed(0);
           const popup = Swal.getHtmlContainer();
           if (popup) {
-            const progressElement = popup.querySelector(".zip-progress b");
-            if (progressElement) progressElement.textContent = `${progress}%`;
-            if (metadata.currentFile) {
-              Swal.update({
-                html: `Compressing: ${metadata.currentFile}...<br>Overall: <span class="zip-progress"><b>${progress}%</b></span>`,
-              });
-            } else {
-              Swal.update({
-                html: `Generating ZIP structure... <span class="zip-progress"><b>${progress}%</b></span>`,
-              });
-            }
+            const progEl = popup.querySelector(".zip-progress b");
+            if (progEl) progEl.textContent = `${progress}%`;
+            const baseHtml = metadata.currentFile
+              ? `Compressing: ${metadata.currentFile}...`
+              : `Generating ZIP structure...`;
+            Swal.update({
+              html: `${baseHtml}<br>Overall: <span class="zip-progress"><b>${progress}%</b></span>`,
+            });
           }
         }
       );
       saveAs(zipBlob, `converted_images_${outputFormat}.zip`);
       Swal.close();
     } catch (error) {
-      console.error("Error creating ZIP file:", error);
       Swal.fire({
         icon: "error",
-        title: "ZIP Creation Failed",
+        title: "ZIP Failed",
         text: error.message || "Could not create ZIP.",
         customClass: { popup: "swal2-popup" },
       });
@@ -371,6 +319,7 @@ export default function PngConverterPage() {
       <div className="converter-card">
         <header>
           <h1>
+            {/* Lightning Bolt Icon */}
             <svg
               width="32"
               height="32"
@@ -488,15 +437,32 @@ export default function PngConverterPage() {
           >
             {isLoading ? (
               <>
-                {" "}
-                <svg className="spinner" viewBox="0 0 24 24">
-                  ...
-                </svg>{" "}
-                Processing...{" "}
+                {/* Spinner Icon */}
+                <svg
+                  className="spinner"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    style={{ opacity: 0.25 }}
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    style={{ opacity: 0.75 }}
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Processing...
               </>
             ) : (
               <>
-                {" "}
+                {/* Arrow Icon */}
                 <svg
                   width="20"
                   height="20"
@@ -504,12 +470,18 @@ export default function PngConverterPage() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  ...
-                </svg>{" "}
+                  <path
+                    d="M14 5L21 12M21 12L14 19M21 12H3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Convert{" "}
                 {selectedFiles.length > 0
                   ? `(${selectedFiles.length}) File(s)`
-                  : "Files"}{" "}
+                  : "Files"}
               </>
             )}
           </button>
@@ -538,6 +510,7 @@ export default function PngConverterPage() {
                   disabled={isZipping}
                   aria-label={`Download ${fileData.outputName}`}
                 >
+                  {/* Download Icon */}
                   <svg
                     width="16"
                     height="16"
@@ -545,7 +518,13 @@ export default function PngConverterPage() {
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    ...
+                    <path
+                      d="M4 15L4 18C4 19.1046 4.89543 20 6 20L18 20C19.1046 20 20 19.1046 20 18V15M12 4L12 15M12 15L8 11M12 15L16 11"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                   Download
                 </button>
@@ -562,18 +541,35 @@ export default function PngConverterPage() {
               >
                 {isZipping ? (
                   <>
-                    {" "}
-                    <svg className="spinner" viewBox="0 0 24 24">
-                      ...
-                    </svg>{" "}
+                    {/* Spinner Icon */}
+                    <svg
+                      className="spinner"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        style={{ opacity: 0.25 }}
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        style={{ opacity: 0.75 }}
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
                     Zipping...{" "}
                     <span className="zip-progress">
                       <b>0%</b>
-                    </span>{" "}
+                    </span>
                   </>
                 ) : (
                   <>
-                    {" "}
+                    {/* Download All Icon */}
                     <svg
                       width="16"
                       height="16"
@@ -581,9 +577,15 @@ export default function PngConverterPage() {
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      ...
-                    </svg>{" "}
-                    Download All ({convertedFilesData.length}) as ZIP{" "}
+                      <path
+                        d="M21 15V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V15M17 10L12 15M12 15L7 10M12 15V3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Download All ({convertedFilesData.length}) as ZIP
                   </>
                 )}
               </button>
