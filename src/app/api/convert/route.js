@@ -1,24 +1,38 @@
+// pages/api/convert/route.js (or wherever your file is)
+
 import { NextResponse } from 'next/server';
 import sharp from 'sharp';
 import path from 'path';
 
 // --- Configuration Constants ---
-// Constant for runtime checks (per-file validation)
-const MAX_FILE_SIZE_API = 100 * 1024 * 1024; // 100 MB in bytes
-const DEFAULT_QUALITY = 80; // Default quality for lossy formats
+const MAX_FILE_SIZE_API = 100 * 1024 * 1024; // 100 MB in bytes (Keep this for file size)
+const DEFAULT_QUALITY = 85; // Slightly increased default quality
 const SUPPORTED_OUTPUT_FORMATS = ['webp', 'jpeg', 'png', 'avif', 'gif'];
 
+// --- START: Sharp Configuration ---
+// Increase Sharp's pixel limit significantly.
+// Default is 268,403,894 pixels (~16k x 16k).
+// Set to a much larger value (e.g., 2 billion pixels, ~45k x 45k).
+// Use 'false' to disable the limit entirely (USE WITH CAUTION - potential memory issues on server).
+// Choose a large number for a safer approach.
+const MAX_SHARP_PIXELS = 2_000_000_000; // 2 Billion pixels
+try {
+    sharp.limitInputPixels(MAX_SHARP_PIXELS);
+    console.log(`Sharp pixel limit set to: ${MAX_SHARP_PIXELS.toLocaleString()}`);
+} catch (err) {
+    // This might fail if sharp version is very old or in certain environments
+    console.error("Failed to set Sharp pixel limit:", err);
+    // Proceed with default limit if setting fails
+}
+// --- END: Sharp Configuration ---
+
+
 // --- START: Next.js API Route Configuration ---
-// Configure Next.js specific settings for this API route
 export const config = {
     api: {
         bodyParser: {
-            // Increase the maximum request body size allowed.
-            // MUST be a string literal for static analysis by Next.js build.
-            sizeLimit: '100mb', // Correctly set as a string literal
+            sizeLimit: '105mb', // Slightly larger than MAX_FILE_SIZE_API to accommodate overhead
         },
-        // Note: Deployment platforms like Vercel (Hobby plan) might enforce
-        // their own lower limits (e.g., 4.5MB) which override this setting.
     },
 };
 // --- END: Next.js API Route Configuration ---
@@ -29,84 +43,90 @@ export const config = {
  * @returns {Promise<NextResponse>} The response object containing results or errors.
  */
 export async function POST(request) {
-    // Arrays to hold results and errors for batch processing
     const results = [];
     const errors = [];
 
     try {
-        // Parse the incoming form data (handles multipart/form-data)
         const formData = await request.formData();
-        const files = formData.getAll('files'); // Get all files associated with the 'files' key
-        const outputFormat = formData.get('outputFormat')?.toLowerCase() || 'webp'; // Get selected format, default to webp
+        const files = formData.getAll('files');
+        const outputFormat = formData.get('outputFormat')?.toLowerCase() || 'webp';
 
         // --- Input Validation ---
-
-        // Validate the requested output format against supported list
         if (!SUPPORTED_OUTPUT_FORMATS.includes(outputFormat)) {
             return NextResponse.json(
                 { results: [], errors: [{ originalName: 'Invalid Request', error: `Output format "${outputFormat}" is not supported. Supported: ${SUPPORTED_OUTPUT_FORMATS.join(', ')}`, success: false }] },
-                { status: 400 } // Bad Request
+                { status: 400 }
             );
         }
-
-        // Check if any files were uploaded
         if (!files || files.length === 0) {
-            return NextResponse.json({ results: [], errors: [{ originalName: 'No Files', error: 'No files were uploaded in the request.', success: false }] }, { status: 400 });
+            return NextResponse.json({ results: [], errors: [{ originalName: 'No Files', error: 'No files were uploaded.', success: false }] }, { status: 400 });
         }
 
         // --- Process Each Uploaded File ---
-        // Use a for...of loop for async operations inside
         for (const file of files) {
-            // Check if the item is actually a File object
             if (!(file instanceof File)) {
                 errors.push({ originalName: 'Unknown file', error: 'Received invalid file data.', success: false });
-                continue; // Skip this item
+                continue;
             }
 
-            const originalName = file.name || 'unknown_image'; // Get filename
+            const originalName = file.name || 'unknown_image';
 
             try {
                 // --- Per-File Validations ---
-                 if (file.size === 0) {
-                    throw new Error('File is empty.');
+                 if (file.size === 0) throw new Error('File is empty.');
+                 if (!file.type.startsWith('image/')) throw new Error('Invalid file type (only images allowed).');
+                 if (file.size > MAX_FILE_SIZE_API) {
+                     throw new Error(`File size (${(file.size / 1024 / 1024).toFixed(2)} MB) exceeds server limit (${MAX_FILE_SIZE_API / 1024 / 1024} MB).`);
                  }
-                 if (!file.type.startsWith('image/')) {
-                     throw new Error('Invalid file type (only images are allowed).');
-                 }
-                // Validate individual file size against the runtime constant
-                if (file.size > MAX_FILE_SIZE_API) {
-                    throw new Error(`File size (${(file.size / 1024 / 1024).toFixed(2)} MB) exceeds the server limit (${MAX_FILE_SIZE_API / 1024 / 1024} MB).`);
-                }
 
                 // --- Image Conversion using Sharp ---
-                const fileBuffer = Buffer.from(await file.arrayBuffer()); // Read file content into a Buffer
-                let convertedBuffer;
-                const sharpInstance = sharp(fileBuffer); // Initialize Sharp
+                const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-                // Apply the correct Sharp conversion method based on the format
+                // IMPORTANT: Create Sharp instance *after* limitInputPixels has been set globally
+                const sharpInstance = sharp(fileBuffer, {
+                    // Optionally enable sequentialRead for potentially lower memory usage on very large images
+                    // sequentialRead: true // Uncomment if memory becomes an issue
+                });
+
+                let convertedBuffer;
+                const metadata = await sharpInstance.metadata(); // Get metadata early if needed
+
+                // Check dimensions *before* attempting conversion (optional but good practice)
+                // Note: This check is now less critical since we increased the limit,
+                // but it can catch *truly* gigantic images if MAX_SHARP_PIXELS is still finite.
+                const currentPixels = (metadata.width || 0) * (metadata.height || 0);
+                if (MAX_SHARP_PIXELS && currentPixels > MAX_SHARP_PIXELS) { // Check only if limit is not disabled (false)
+                    throw new Error(`Image dimensions (${metadata.width}x${metadata.height}) exceed the configured pixel limit (${MAX_SHARP_PIXELS.toLocaleString()} pixels).`);
+                }
+
+
+                // Apply conversion based on format
                 switch (outputFormat) {
                     case 'webp':
                         convertedBuffer = await sharpInstance.webp({ quality: DEFAULT_QUALITY }).toBuffer();
                         break;
                     case 'jpeg':
                     case 'jpg':
-                        const meta = await sharpInstance.metadata();
-                        if (meta.hasAlpha) { // Flatten if image has transparency
-                             convertedBuffer = await sharpInstance.flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg({ quality: DEFAULT_QUALITY }).toBuffer();
+                        // Use metadata.hasAlpha if available, otherwise assume no alpha for safety
+                        if (metadata.hasAlpha) {
+                             convertedBuffer = await sharpInstance.flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg({ quality: DEFAULT_QUALITY, mozjpeg: true }).toBuffer(); // Enable mozjpeg for better compression
                         } else {
-                             convertedBuffer = await sharpInstance.jpeg({ quality: DEFAULT_QUALITY }).toBuffer();
+                             convertedBuffer = await sharpInstance.jpeg({ quality: DEFAULT_QUALITY, mozjpeg: true }).toBuffer();
                         }
                         break;
                     case 'png':
-                        convertedBuffer = await sharpInstance.png({ compressionLevel: 6 }).toBuffer();
+                        // Higher compression level for PNG (lossless, slower)
+                        convertedBuffer = await sharpInstance.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
                         break;
                     case 'avif':
-                        convertedBuffer = await sharpInstance.avif({ quality: 50 }).toBuffer();
+                         // Higher quality for AVIF, 'effort' controls encoding speed vs compression
+                        convertedBuffer = await sharpInstance.avif({ quality: 60, effort: 4 }).toBuffer(); // effort 0-9 (slowest/best compression)
                         break;
                     case 'gif':
-                        convertedBuffer = await sharpInstance.gif().toBuffer();
+                         // Add dither option for potentially better quality GIFs
+                        convertedBuffer = await sharpInstance.gif({ dither: 0.5 }).toBuffer();
                         break;
-                    default:
+                    default: // Should not happen due to earlier validation
                         throw new Error(`Internal error: Unsupported format ${outputFormat}`);
                 }
 
@@ -115,12 +135,9 @@ export async function POST(request) {
                 const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_');
                 const outputExtension = (outputFormat === 'jpeg') ? 'jpg' : outputFormat;
                 const outputFilename = `${sanitizedBaseName}.${outputExtension}`;
-
-                // Create Base64 Data URL to send back to the client for download
                 const mimeType = `image/${outputExtension}`;
                 const dataUrl = `data:${mimeType};base64,${convertedBuffer.toString('base64')}`;
 
-                // Add successful conversion details to the results array
                 results.push({
                     originalName: originalName,
                     outputName: outputFilename,
@@ -129,50 +146,37 @@ export async function POST(request) {
                 });
 
             } catch (fileError) {
-                 // Catch errors during processing of *this specific file*
                  console.error(`Error processing ${originalName}:`, fileError);
                  errors.push({
                     originalName: originalName,
-                    error: fileError.message || 'Failed to process this file.',
+                    // Provide more specific error if it's the pixel limit one
+                    error: fileError.message?.includes('exceed') && fileError.message?.includes('pixel limit')
+                        ? 'Image dimensions are too large for the server to process.'
+                        : fileError.message || 'Failed to process this file.',
                     success: false,
                  });
-                 // Continue to the next file even if one fails
             }
-        } // --- End of file processing loop ---
+        } // End loop
 
         // --- Return Response ---
-        // Send JSON containing both successful results and any errors
         return NextResponse.json({ results, errors }, { status: 200 });
 
     } catch (error) {
-        // --- Catch Global Errors ---
-        // Errors like parsing formData, unexpected server issues
         console.error('API Global Error:', error);
-
-        // Attempt to identify and specifically handle "Payload Too Large" errors
         if (error.type === 'entity.too.large' || error.message?.includes('body exceeded') || error.message?.includes('too large')) {
              return NextResponse.json(
-                 {
-                    results: [],
-                    errors: [{ originalName: 'Request Error', error: `Total upload size exceeds the server limit (${MAX_FILE_SIZE_API / 1024 / 1024} MB). Please upload fewer or smaller files.`, success: false }]
-                 },
-                 { status: 413 } // HTTP 413 Payload Too Large
+                 { results: [], errors: [{ originalName: 'Request Error', error: `Total upload size exceeds the server limit (${(config.api.bodyParser.sizeLimit || 'default')}). Please upload fewer or smaller files.`, success: false }] },
+                 { status: 413 }
             );
         }
-
-        // Fallback for other types of server errors
         return NextResponse.json(
-             {
-                results: [],
-                errors: [{ originalName: 'Server Error', error: error.message || 'An unexpected server error occurred.', success: false }]
-             },
-             { status: 500 } // HTTP 500 Internal Server Error
+             { results: [], errors: [{ originalName: 'Server Error', error: error.message || 'An unexpected server error occurred.', success: false }] },
+             { status: 500 }
         );
     }
 }
 
 // --- GET Handler ---
-// Handles GET requests to this endpoint (e.g., for simple health check)
 export async function GET() {
-    return NextResponse.json({ message: 'Image Converter API is active. Send POST requests with files.' }, { status: 200 });
+    return NextResponse.json({ message: 'Image Converter API active. Send POST. Pixel limit: ' + (MAX_SHARP_PIXELS ? MAX_SHARP_PIXELS.toLocaleString() : 'Unlimited (Caution!)') }, { status: 200 });
 }
